@@ -5,11 +5,19 @@ const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const MAX_MB = Number(process.env.MAX_FILE_MB || 500);
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
+// Carpeta de datos: usa DATA_DIR si se puede; si no, una carpeta local.
+let DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch (e) {
+  console.warn(`No se pudo usar ${DATA_DIR} (${e.code}). Se usa carpeta local; los archivos no se conservarán.`);
+  DATA_DIR = path.join(__dirname, 'data');
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
 const DB = path.join(DATA_DIR, 'files.json');
 const load = () => { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch { return []; } };
 const save = (list) => fs.writeFileSync(DB, JSON.stringify(list, null, 2));
@@ -37,13 +45,12 @@ const publicView = (f) => ({
 });
 
 const app = express();
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Solo se sirve index.html (no el resto de archivos del proyecto).
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 app.get('/api/files', (_req, res) => res.json(load().map(publicView)));
 
-app.post('/api/check', requireAdmin, (_req, res) => res.json({ ok: true }));
-
-// La contraseña se valida ANTES de recibir el archivo.
 app.post('/api/upload', requireAdmin, (req, res) => {
   upload.single('file')(req, res, (err) => {
     if (err) {
