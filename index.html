@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Descargas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ebef;--surface:#f6f7f9;--ink:#101828;--muted:#5b6577;--line:#c5ccd6;--accent:#2f3cf5;--accent-ink:#fff;--danger:#b42318;
+--display:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;--body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.5 var(--body)}
+.wrap{max-width:880px;margin:0 auto;padding:clamp(1.25rem,4vw,3rem)}
+header{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.brand{font:800 1.25rem var(--display);letter-spacing:-.01em}
+h1{font:800 clamp(2.6rem,9vw,5.5rem)/.95 var(--display);letter-spacing:-.03em;margin:clamp(2.5rem,8vw,5rem) 0 1rem;max-width:11ch}
+.lead{color:var(--muted);max-width:46ch;margin:0 0 3rem}
+button,.btn{font:600 1rem var(--body);cursor:pointer;border-radius:6px;padding:.65rem 1.1rem;border:2px solid var(--ink);background:transparent;color:var(--ink);text-decoration:none;display:inline-block;line-height:1.2}
+button:hover,.btn:hover{background:var(--ink);color:var(--bg)}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.primary:hover{background:#1f2bd0;border-color:#1f2bd0;color:var(--accent-ink)}
+.link{border:0;padding:.3rem .2rem;text-decoration:underline;text-underline-offset:3px;color:var(--muted)}
+.link:hover{background:transparent;color:var(--ink)}
+.link.del:hover{color:var(--danger)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+ul{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+li{display:grid;grid-template-columns:1fr auto;gap:.5rem 1.5rem;align-items:center;padding:1.4rem 0;border-bottom:1px solid var(--line)}
+.title{font:800 1.35rem/1.15 var(--display);margin:0}
+li.latest .title{font-size:clamp(1.8rem,5vw,2.6rem)}
+.tag{display:inline-block;background:var(--accent);color:#fff;font:600 .85rem var(--body);padding:.1rem .5rem;border-radius:4px;margin-left:.6rem;vertical-align:middle}
+.meta{color:var(--muted);font-size:.95rem;margin-top:.3rem}
+.notes{margin:.5rem 0 0;max-width:60ch}
+.actions{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem}
+.empty{padding:2rem 0;color:var(--muted)}
+dialog{border:2px solid var(--ink);border-radius:10px;padding:0;background:var(--surface);color:var(--ink);width:min(520px,calc(100% - 2rem))}
+dialog::backdrop{background:rgba(16,24,40,.55)}
+form{padding:1.6rem;display:grid;gap:1rem}
+form h2{font:800 1.6rem var(--display);margin:0}
+label{display:grid;gap:.3rem;font-weight:600;font-size:.95rem}
+input,textarea{font:400 1rem var(--body);padding:.6rem .7rem;border:2px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:100%}
+input:focus,textarea:focus{border-color:var(--accent);outline:none}
+.drop{border:2px dashed var(--ink);border-radius:8px;padding:1.6rem 1rem;text-align:center;cursor:pointer;background:#fff}
+.drop.over,.drop:focus-visible{border-color:var(--accent);background:#eef0ff}
+.drop strong{display:block;font:800 1.1rem var(--display)}
+.drop span{color:var(--muted);font-size:.95rem}
+progress{width:100%;height:10px;accent-color:var(--accent)}
+.err{color:var(--danger);font-weight:600;margin:0;min-height:1.4em}
+.row{display:flex;gap:.6rem;justify-content:flex-end}
+.hidden{display:none}
+@media(max-width:560px){li{grid-template-columns:1fr}.actions{flex-direction:row;align-items:center;flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="brand">Descargas</span>
+    <button id="open" type="button">Subir app</button>
+  </header>
+
+  <h1>Descarga la app y empieza a usarla.</h1>
+  <p class="lead">Elige la versión, descárgala en tu equipo y ábrela. La más reciente aparece primero.</p>
+
+  <ul id="list" aria-live="polite"></ul>
+</div>
+
+<dialog id="dlg">
+  <form id="form">
+    <h2>Subir una app</h2>
+    <label>Contraseña de administrador
+      <input id="pass" type="password" autocomplete="current-password" required>
+    </label>
+    <label>Nombre
+      <input id="title" maxlength="80" placeholder="Si lo dejas vacío, se usa el nombre del archivo">
+    </label>
+    <label>Versión
+      <input id="version" maxlength="30" placeholder="1.0.0">
+    </label>
+    <label>Qué incluye esta versión
+      <textarea id="notes" rows="2" maxlength="300"></textarea>
+    </label>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Elegir archivo">
+      <strong id="dropTitle">Arrastra el archivo aquí</strong>
+      <span id="dropSub">o haz clic para elegirlo (.apk, .exe, .zip, .dmg…)</span>
+      <input id="file" type="file" class="hidden">
+    </div>
+    <progress id="bar" class="hidden" max="100" value="0"></progress>
+    <p class="err" id="err" role="alert"></p>
+    <div class="row">
+      <button type="button" id="cancel">Cancelar</button>
+      <button type="submit" class="primary" id="send">Subir app</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let admin = sessionStorage.getItem('adm') || '';
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const size = (b) => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(1) + ' MB' : (b / 1073741824).toFixed(2) + ' GB';
+const date = (d) => new Date(d).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' });
+
+async function render() {
+  const ul = $('#list');
+  try {
+    const files = await (await fetch('/api/files')).json();
+    if (!files.length) { ul.innerHTML = '<li class="empty">Todavía no hay apps publicadas. Usa “Subir app” para publicar la primera.</li>'; return; }
+    ul.innerHTML = files.map((f, i) => `
+      <li class="${i === 0 ? 'latest' : ''}">
+        <div>
+          <h2 class="title">${esc(f.title)}${i === 0 ? '<span class="tag">Última versión</span>' : ''}</h2>
+          <div class="meta">${f.version ? 'Versión ' + esc(f.version) + ' · ' : ''}${size(f.size)} · ${date(f.createdAt)} · ${f.downloads} descarga${f.downloads === 1 ? '' : 's'}</div>
+          ${f.notes ? `<p class="notes">${esc(f.notes)}</p>` : ''}
+        </div>
+        <div class="actions">
+          <a class="btn ${i === 0 ? 'primary' : ''}" href="/download/${f.id}">Descargar</a>
+          <button class="link" data-copy="${f.id}" type="button">Copiar enlace</button>
+          ${admin ? `<button class="link del" data-del="${f.id}" type="button">Eliminar</button>` : ''}
+        </div>
+      </li>`).join('');
+  } catch { ul.innerHTML = '<li class="empty">No se pudo cargar la lista. Recarga la página.</li>'; }
+}
+
+$('#list').addEventListener('click', async (e) => {
+  const copy = e.target.dataset.copy, del = e.target.dataset.del;
+  if (copy) {
+    await navigator.clipboard.writeText(location.origin + '/download/' + copy);
+    e.target.textContent = 'Enlace copiado';
+    setTimeout(() => (e.target.textContent = 'Copiar enlace'), 1800);
+  }
+  if (del && confirm('¿Eliminar esta app? Dejará de poder descargarse.')) {
+    const r = await fetch('/api/files/' + del, { method: 'DELETE', headers: { 'x-admin-password': admin } });
+    if (r.ok) render(); else alert((await r.json()).error);
+  }
+});
+
+// Diálogo de subida
+const dlg = $('#dlg'), drop = $('#drop'), fileIn = $('#file');
+let chosen = null;
+function pick(f) {
+  chosen = f;
+  $('#dropTitle').textContent = f ? f.name : 'Arrastra el archivo aquí';
+  $('#dropSub').textContent = f ? size(f.size) : 'o haz clic para elegirlo (.apk, .exe, .zip, .dmg…)';
+}
+$('#open').onclick = () => { $('#pass').value = admin; $('#err').textContent = ''; dlg.showModal(); };
+$('#cancel').onclick = () => dlg.close();
+drop.onclick = () => fileIn.click();
+drop.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } };
+fileIn.onchange = () => pick(fileIn.files[0] || null);
+['dragover', 'dragenter'].forEach((n) => drop.addEventListener(n, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((n) => drop.addEventListener(n, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => pick(e.dataTransfer.files[0] || null));
+
+$('#form').onsubmit = (e) => {
+  e.preventDefault();
+  const err = $('#err'); err.textContent = '';
+  if (!chosen) { err.textContent = 'Elige el archivo de la app antes de subirla.'; return; }
+  const pass = $('#pass').value;
+  const fd = new FormData();
+  fd.append('title', $('#title').value);
+  fd.append('version', $('#version').value);
+  fd.append('notes', $('#notes').value);
+  fd.append('file', chosen);
+  const xhr = new XMLHttpRequest();
+  const bar = $('#bar'), send = $('#send');
+  xhr.open('POST', '/api/upload');
+  xhr.setRequestHeader('x-admin-password', pass);
+  xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) bar.value = (ev.loaded / ev.total) * 100; };
+  xhr.onloadstart = () => { bar.classList.remove('hidden'); bar.value = 0; send.disabled = true; send.textContent = 'Subiendo…'; };
+  xhr.onloadend = () => {
+    send.disabled = false; send.textContent = 'Subir app';
+    let data = {}; try { data = JSON.parse(xhr.responseText); } catch {}
+    if (xhr.status === 201) {
+      admin = pass; sessionStorage.setItem('adm', pass);
+      bar.classList.add('hidden'); $('#form').reset(); pick(null); dlg.close(); render();
+    } else { bar.classList.add('hidden'); err.textContent = data.error || 'No se pudo subir. Revisa tu conexión e inténtalo de nuevo.'; }
+  };
+  xhr.send(fd);
+};
+render();
+</script>
+</body>
+</html>
